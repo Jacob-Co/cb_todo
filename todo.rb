@@ -6,6 +6,7 @@ require "tilt/erubis"
 configure do
   enable :sessions
   set :session_secret, 'secret'
+  set :erb, :escape_html => true
 end
 
 before do
@@ -63,6 +64,7 @@ end
 get "/" do
   redirect "/lists"
 end
+
 
 # See all existing lists
 get "/lists" do
