@@ -14,6 +14,14 @@ before do
 end
 
 helpers do
+  def load_list(index)
+    list = session[:lists][index] if index && session[:lists][index]
+  return list if list
+
+    session[:error] = "The specified list was not found."
+    redirect "/lists"
+  end
+
   def sort_lists(lists, &block)
     complete_lists, incomplete_lists = lists.partition {|list| all_todos_complete?(list)}
 
@@ -26,20 +34,6 @@ helpers do
 
     incomplete_todos.each {|todo| yield todo, todos.index(todo)}
     complete_todos.each {|todo| yield todo, todos.index(todo)}
-
-    # incomplete_lists = {}
-    # complete_lists = {}
-
-    # todos.each_with_index do |todo, idx|
-    #   if todo[:completed]
-    #     complete_lists[todo] = idx
-    #   else
-    #     incomplete_lists[todo] = idx
-    #   end
-    # end
-
-    # incomplete_lists.each(&block)
-    # complete_lists.each(&block)
   end
 
   def all_todos_complete?(list)
@@ -105,21 +99,21 @@ end
 # Got to edit list page
 get /\/lists\/([0-9]+)\/edit/ do
   @list_order = params[:captures].first.to_i
-  @list = session[:lists][@list_order]
+  @list = load_list(@list_order)
   erb :edit_list, layout: :layout
 end
 
 # Go to a list page for more info
 get /\/lists\/([0-9]+)/ do
   @list_order = params[:captures].first.to_i
-  @list = session[:lists][@list_order]
+  @list = load_list(@list_order)
   erb :list_info, layout: :layout
 end
 
 # Rename a list
 post /\/lists\/([0-9]+)\/rename/ do
   @list_order = params[:captures].first.to_i
-  @list = session[:lists][@list_order]
+  @list = load_list(@list_order)
 
   original_name = @list[:name]
   new_name = params[:list_name].strip
@@ -175,7 +169,7 @@ end
 # mark all tasks complete
 post /\/lists\/([0-9]+)\/complete_all/ do
   @list_order = params[:captures].first.to_i
-  @list = session[:lists][@list_order]
+  @list = load_list(@list_order)
   all_todos = @list[:todos]
   if all_todos.empty?
     session[:error] = "There are currently no to do's to mark."
@@ -190,7 +184,7 @@ end
 # Add a new todo to a list
 post /\/lists\/([0-9]+)\/todo/ do
   @list_order = params[:captures].first.to_i
-  @list = session[:lists][@list_order]
+  @list = load_list(@list_order)
 
   new_todo = params[:todo].strip
 
